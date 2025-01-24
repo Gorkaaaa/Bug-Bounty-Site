@@ -7,16 +7,19 @@
 
 * [🍃 Port Swigger](api/port-swigger.md)
 * [🌃 Real World Payloads](api/real-world-payloads.md)
+* [🪳 What to try?](api/what-to-try.md)
 
 ## 🤺 File Upload
 
 * [📁 Port Swigger](file-upload/port-swigger.md)
 * [📑 Real World Payloads](file-upload/real-world-payloads.md)
+* [👁️ What to try?](file-upload/what-to-try.md)
 
 ## 🏃 Race Condition
 
 * [🏎️ Port Swigger](race-condition/port-swigger.md)
 * [🎑 Real World Payloads](race-condition/real-world-payloads.md)
+* [🦗 What to try?](race-condition/what-to-try.md)
 
 ## 🕸️ Web Caché
 
