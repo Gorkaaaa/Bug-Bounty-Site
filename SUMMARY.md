@@ -25,6 +25,7 @@
 
 * [💆‍♂️ Port Swigger](web-cache/port-swigger.md)
 * [🫀 Real world Payloads](web-cache/real-world-payloads.md)
+* [🦹‍♂️ What to try?](web-cache/what-to-try.md)
 
 ## 📢 CORS
 
