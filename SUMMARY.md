@@ -37,11 +37,13 @@
 
 * [🎃 Port Swigger](web-sockets/port-swigger.md)
 * [🧟‍♂️ Real World Payloads](web-sockets/real-world-payloads.md)
+* [🦅 What to try?](web-sockets/what-to-try.md)
 
-## 🎋 Graph QL
+## 🎋 GraphQL
 
-* [🦜 Port Swigger](graph-ql/port-swigger.md)
-* [🧖‍♂️ Real World Payloads](graph-ql/real-world-payloads.md)
+* [🦜 Port Swigger](graphql/port-swigger.md)
+* [🧖‍♂️ Real World Payloads](graphql/real-world-payloads.md)
+* [🧑‍🦯 What to try?](graphql/what-to-try.md)
 
 ## 🛠️ Tools
 

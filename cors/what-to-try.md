@@ -2,7 +2,7 @@
 
 ## Mini-Tutoriales Ofensivos sobre Vulnerabilidades de CORS (Enfocado en Bug Bounty)
 
-### 1. \*\*CORS Misconfiguration con Access-Control-Allow-Origin: \*\*\*
+### 1. CORS Misconfiguration con Access-Control-Allow-Origin:&#x20;
 
 #### Descripción
 
