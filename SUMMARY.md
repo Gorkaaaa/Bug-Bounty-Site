@@ -31,6 +31,7 @@
 
 * [🍀 Port Swigger](cors/port-swigger.md)
 * [🌎 Real World Payloads](cors/real-world-payloads.md)
+* [♥️ What to try?](cors/what-to-try.md)
 
 ## 👾 Web Sockets
 
