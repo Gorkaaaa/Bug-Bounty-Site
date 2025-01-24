@@ -8,6 +8,7 @@
 * [🍃 Port Swigger](api/port-swigger.md)
 * [🌃 Real World Payloads](api/real-world-payloads.md)
 * [🪳 What to try?](api/what-to-try.md)
+* [🦾 Reports & Poc](api/reports-and-poc.md)
 
 ## 🤺 File Upload
 
