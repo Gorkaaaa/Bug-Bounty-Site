@@ -51,3 +51,4 @@
 * [🕵️ Sublisting](tools/sublisting.md)
 * [👁️ BugHorizon](tools/bughorizon.md)
 * [🧢 BlackBoxer](tools/blackboxer.md)
+* [🥷 Disclosure Search](tools/disclosure-search.md)
